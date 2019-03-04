@@ -1,0 +1,37 @@
+from onvif import ONVIFCamera
+mycam = ONVIFCamera("192.168.15.43", 80, "lehha123451", "QuJ61VjIerAT")
+
+
+#getting device information
+print(mycam.devicemgmt.GetDeviceInformation())
+media_service = mycam.create_media_service()
+profiles = media_service.GetProfiles()
+print(profiles)
+token = media_service.GetProfiles()[0].token
+ptz = mycam.create_ptz_service()
+ptz_token = profiles.PTZConfiguration.token
+
+#absolute move
+ptz.create_type("AbsoluteMove")
+pos = ptz.GetStatus({"ProfileToken": token}).Position
+x = pos.PanTilt.x
+y = pos.PanTilt.y
+print(x,y) 
+
+#moving
+if (x + 0.1 > 1):
+ ptz.AbsoluteMove({"ProfileToken": token, "Position":{"PanTilt":{"x": x - 0.1,"y": y}}})
+else:
+ ptz.AbsoluteMove({"ProfileToken": token, "Position":{"PanTilt":{"x": x + 0.1,"y": y}}})
+
+if (y - 0.1 < -1):
+ ptz.AbsoluteMove({"ProfileToken": token, "Position":{"PanTilt":{"x": x,"y": y + 0.1}}})
+else:
+ ptz.AbsoluteMove({"ProfileToken": token, "Position":{"PanTilt":{"x": x,"y": y - 0.1}}})
+
+pos = ptz.GetStatus({'ProfileToken': token}).Position
+
+if (pos.PanTilt.x == x and pos.PanTilt.y == y):
+ print("Absolute move is not available")
+else:
+ print("Absolute move is absolutely available")
